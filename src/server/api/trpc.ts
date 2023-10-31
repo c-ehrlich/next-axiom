@@ -7,7 +7,7 @@
  * need to use are documented accordingly near the end.
  */
 import { initTRPC } from "@trpc/server";
-import { type Logger, type AxiomRequest } from "next-axiom";
+import { Logger, type RequestReport } from "next-axiom";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -45,11 +45,12 @@ export const createInnerTRPCContext = (opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = (opts: { req: AxiomRequest }) => {
+export const createTRPCContext = (opts: { req: NextRequest }) => {
   // Fetch stuff that depends on the request
 
   return {
-    log: opts.req.log,
+    req: opts.req,
+    axiomCtx: { rand: Math.random() },
     ...createInnerTRPCContext({
       headers: opts.req.headers,
     }),
@@ -98,16 +99,49 @@ export const createTRPCRouter = t.router;
  * to demand that `log` is available in the context
  */
 import { experimental_standaloneMiddleware } from "@trpc/server";
+import { type NextRequest } from "next/server";
 
 const axiomMiddleware = experimental_standaloneMiddleware<{
-  ctx: { log: Logger };
+  ctx: {
+    req: Request | NextRequest;
+    axiomCtx?: Record<string, unknown>;
+  };
 }>().create((opts) => {
-  const loggerWithInput = opts.ctx.log.with({ input: opts.rawInput ?? {} });
+  const { req } = opts.ctx;
+
+  let region = "";
+  if ("geo" in req) {
+    region = req.geo?.region ?? "";
+  }
+
+  const report: RequestReport = {
+    startTime: new Date().getTime(),
+    path: req.url,
+    method: req.method,
+    host: req.headers.get("host"),
+    userAgent: req.headers.get("user-agent"),
+    scheme: "https",
+    ip: req.headers.get("x-forwarded-for"),
+    region,
+  };
+
+  const log = new Logger({
+    args: {
+      req: report,
+      input: opts.rawInput, // TODO: put something if nullish?
+      ctx: opts.ctx.axiomCtx,
+    },
+    req: { fooReq: "bar" },
+  });
+
+  // const trpcProcedureLogger = log.with({
+  //   req: report,
+  //   input: opts.rawInput,
+  //   ctx: opts.ctx.axiomCtx,
+  // });
 
   return opts.next({
-    ctx: {
-      log: loggerWithInput,
-    },
+    ctx: { log },
   });
 });
 
