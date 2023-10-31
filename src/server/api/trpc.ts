@@ -7,9 +7,10 @@
  * need to use are documented accordingly near the end.
  */
 import { initTRPC } from "@trpc/server";
-import { Logger, type RequestReport } from "next-axiom";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { axiomTRPCMiddleware } from "./axiom-trpc";
+import { type NextRequest } from "next/server";
 
 /**
  * 1. CONTEXT
@@ -49,8 +50,12 @@ export const createTRPCContext = (opts: { req: NextRequest }) => {
   // Fetch stuff that depends on the request
 
   return {
+    // NOTE: req and axiomCtx are required for axiomTRPCMiddleware
     req: opts.req,
-    axiomCtx: { rand: Math.random() },
+    axiomCtx: {
+      asdf: "hi from axiom logger context",
+      randomNumber: Math.random(),
+    },
     ...createInnerTRPCContext({
       headers: opts.req.headers,
     }),
@@ -98,51 +103,6 @@ export const createTRPCRouter = t.router;
  * we are using `experimental_standaloneMiddleware` because it allows us
  * to demand that `log` is available in the context
  */
-import { experimental_standaloneMiddleware } from "@trpc/server";
-import { type NextRequest } from "next/server";
-
-const axiomMiddleware = experimental_standaloneMiddleware<{
-  ctx: {
-    req: Request | NextRequest;
-    axiomCtx?: Record<string, unknown>;
-  };
-}>().create((opts) => {
-  const { req } = opts.ctx;
-
-  let region = "";
-  if ("geo" in req) {
-    region = req.geo?.region ?? "";
-  }
-
-  const report: RequestReport = {
-    startTime: new Date().getTime(),
-    path: req.url,
-    method: req.method,
-    host: req.headers.get("host"),
-    userAgent: req.headers.get("user-agent"),
-    scheme: "https",
-    ip: req.headers.get("x-forwarded-for"),
-    region,
-  };
-
-  const log = new Logger({
-    args: {
-      input: opts.rawInput, // TODO: put something if nullish?
-      ctx: opts.ctx.axiomCtx,
-    },
-    req: report,
-  });
-
-  // const trpcProcedureLogger = log.with({
-  //   req: report,
-  //   input: opts.rawInput,
-  //   ctx: opts.ctx.axiomCtx,
-  // });
-
-  return opts.next({
-    ctx: { log },
-  });
-});
 
 /**
  * Public (unauthenticated) procedure
@@ -153,6 +113,6 @@ const axiomMiddleware = experimental_standaloneMiddleware<{
  */
 
 // we probably want all procedures to log, so we attach the axiomMiddleware to a base procedure
-const baseProcedure = t.procedure.use(axiomMiddleware);
+const baseProcedure = t.procedure.use(axiomTRPCMiddleware);
 
 export const publicProcedure = baseProcedure;
