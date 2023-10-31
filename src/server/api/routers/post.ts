@@ -10,7 +10,8 @@ let post = {
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
+    .query(({ ctx, input }) => {
+      ctx.log.info("Hello from a tRPC procedure", { foo: "bar" });
       return {
         greeting: `Hello ${input.text}`,
       };
