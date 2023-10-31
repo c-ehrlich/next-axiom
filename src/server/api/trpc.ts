@@ -7,7 +7,7 @@
  * need to use are documented accordingly near the end.
  */
 import { initTRPC } from "@trpc/server";
-import { type AxiomRequest } from "next-axiom";
+import { type Logger, type AxiomRequest } from "next-axiom";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -57,6 +57,25 @@ export const createTRPCContext = (opts: { req: AxiomRequest }) => {
 };
 
 /**
+ * create the axiom middleware
+ * we are using `experimental_standaloneMiddleware` because it allows us
+ * to demand that `log` is available in the context
+ */
+import { experimental_standaloneMiddleware } from "@trpc/server";
+
+const axiomMiddleware = experimental_standaloneMiddleware<{
+  ctx: { log: Logger };
+}>().create((opts) => {
+  const loggerWithInput = opts.ctx.log.with({ input: opts.input });
+
+  return opts.next({
+    ctx: {
+      log: loggerWithInput,
+    },
+  });
+});
+
+/**
  * 2. INITIALIZATION
  *
  * This is where the tRPC API is initialized, connecting the context and transformer. We also parse
@@ -99,4 +118,8 @@ export const createTRPCRouter = t.router;
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure;
+
+// we probably want all procedures to log, so we attach the axiomMiddleware to a base procedure
+const baseProcedure = t.procedure.use(axiomMiddleware);
+
+export const publicProcedure = baseProcedure;
