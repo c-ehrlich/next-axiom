@@ -127,11 +127,10 @@ const axiomMiddleware = experimental_standaloneMiddleware<{
 
   const log = new Logger({
     args: {
-      req: report,
       input: opts.rawInput, // TODO: put something if nullish?
       ctx: opts.ctx.axiomCtx,
     },
-    req: { fooReq: "bar" },
+    req: report,
   });
 
   // const trpcProcedureLogger = log.with({
