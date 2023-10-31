@@ -66,7 +66,10 @@ import { experimental_standaloneMiddleware } from "@trpc/server";
 const axiomMiddleware = experimental_standaloneMiddleware<{
   ctx: { log: Logger };
 }>().create((opts) => {
-  const loggerWithInput = opts.ctx.log.with({ input: opts.input });
+  console.log("creating middleware");
+  console.log("input", opts.input);
+  console.log("rawInput", opts.rawInput);
+  const loggerWithInput = opts.ctx.log.with({ input: opts.rawInput ?? {} });
 
   return opts.next({
     ctx: {

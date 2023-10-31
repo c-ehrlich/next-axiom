@@ -11,7 +11,7 @@ export const postRouter = createTRPCRouter({
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
     .query(({ ctx, input }) => {
-      ctx.log.info("Hello from a tRPC procedure", { foo: "bar" });
+      ctx.log.info("in 'hello' procedure", { foo: "bar" });
       return {
         greeting: `Hello ${input.text}`,
       };
@@ -24,10 +24,12 @@ export const postRouter = createTRPCRouter({
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       post = { id: post.id + 1, name: input.name };
+      console.log("in 'create' procedure", { post });
       return post;
     }),
 
-  getLatest: publicProcedure.query(() => {
+  getLatest: publicProcedure.query((opts) => {
+    opts.ctx.log.info("in 'getLatest' procedure", { post });
     return post;
   }),
 });
