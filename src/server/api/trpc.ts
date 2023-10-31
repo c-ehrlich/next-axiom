@@ -57,25 +57,6 @@ export const createTRPCContext = (opts: { req: AxiomRequest }) => {
 };
 
 /**
- * create the axiom middleware
- * we are using `experimental_standaloneMiddleware` because it allows us
- * to demand that `log` is available in the context
- */
-import { experimental_standaloneMiddleware } from "@trpc/server";
-
-const axiomMiddleware = experimental_standaloneMiddleware<{
-  ctx: { log: Logger };
-}>().create((opts) => {
-  const loggerWithInput = opts.ctx.log.with({ input: opts.rawInput ?? {} });
-
-  return opts.next({
-    ctx: {
-      log: loggerWithInput,
-    },
-  });
-});
-
-/**
  * 2. INITIALIZATION
  *
  * This is where the tRPC API is initialized, connecting the context and transformer. We also parse
@@ -110,6 +91,25 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
  * @see https://trpc.io/docs/router
  */
 export const createTRPCRouter = t.router;
+
+/**
+ * create the axiom middleware
+ * we are using `experimental_standaloneMiddleware` because it allows us
+ * to demand that `log` is available in the context
+ */
+import { experimental_standaloneMiddleware } from "@trpc/server";
+
+const axiomMiddleware = experimental_standaloneMiddleware<{
+  ctx: { log: Logger };
+}>().create((opts) => {
+  const loggerWithInput = opts.ctx.log.with({ input: opts.rawInput ?? {} });
+
+  return opts.next({
+    ctx: {
+      log: loggerWithInput,
+    },
+  });
+});
 
 /**
  * Public (unauthenticated) procedure
