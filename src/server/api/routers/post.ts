@@ -19,12 +19,12 @@ export const postRouter = createTRPCRouter({
 
   create: publicProcedure
     .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       // simulate a slow db call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       post = { id: post.id + 1, name: input.name };
-      console.log("in 'create' procedure", { post });
+      ctx.log.info("in 'create' procedure", { post });
       return post;
     }),
 
