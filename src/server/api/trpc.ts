@@ -9,7 +9,7 @@
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
-import { axiomTRPCMiddleware } from "./axiom-trpc";
+import { axiomTRPCMiddleware, axiomTRPCMiddlewareCtx } from "./axiom-trpc";
 import { type NextRequest } from "next/server";
 
 /**
@@ -50,7 +50,6 @@ export const createTRPCContext = (opts: { req: NextRequest }) => {
   // Fetch stuff that depends on the request
 
   return {
-    // NOTE: req and axiomCtx are required for axiomTRPCMiddleware
     axiomReq: opts.req,
     axiomCtx: {
       asdf: "hi from axiom logger context",
@@ -59,7 +58,7 @@ export const createTRPCContext = (opts: { req: NextRequest }) => {
     ...createInnerTRPCContext({
       headers: opts.req.headers,
     }),
-  };
+  } satisfies axiomTRPCMiddlewareCtx; // optional type to get better errors if the setup is wrong
 };
 
 /**

@@ -2,11 +2,13 @@ import { experimental_standaloneMiddleware } from "@trpc/server";
 import { Logger, type RequestReport } from "next-axiom";
 import { type NextRequest } from "next/server";
 
+export type axiomTRPCMiddlewareCtx = {
+  axiomReq: Request | NextRequest;
+  axiomCtx: Record<string, unknown>;
+};
+
 export const axiomTRPCMiddleware = experimental_standaloneMiddleware<{
-  ctx: {
-    axiomReq: Request | NextRequest;
-    axiomCtx: Record<string, unknown>;
-  };
+  ctx: axiomTRPCMiddlewareCtx;
 }>().create((opts) => {
   const { axiomReq: req } = opts.ctx;
 
