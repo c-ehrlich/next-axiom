@@ -4,11 +4,11 @@ import { type NextRequest } from "next/server";
 
 export const axiomTRPCMiddleware = experimental_standaloneMiddleware<{
   ctx: {
-    req: Request | NextRequest;
+    axiomReq: Request | NextRequest;
     axiomCtx: Record<string, unknown>;
   };
 }>().create((opts) => {
-  const { req } = opts.ctx;
+  const { axiomReq: req } = opts.ctx;
 
   let region = "";
   if ("geo" in req) {

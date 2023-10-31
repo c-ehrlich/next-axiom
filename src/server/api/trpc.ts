@@ -51,7 +51,7 @@ export const createTRPCContext = (opts: { req: NextRequest }) => {
 
   return {
     // NOTE: req and axiomCtx are required for axiomTRPCMiddleware
-    req: opts.req,
+    axiomReq: opts.req,
     axiomCtx: {
       asdf: "hi from axiom logger context",
       randomNumber: Math.random(),
