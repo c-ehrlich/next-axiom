@@ -99,12 +99,6 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 export const createTRPCRouter = t.router;
 
 /**
- * create the axiom middleware
- * we are using `experimental_standaloneMiddleware` because it allows us
- * to demand that `log` is available in the context
- */
-
-/**
  * Public (unauthenticated) procedure
  *
  * This is the base piece you use to build new queries and mutations on your tRPC API. It does not
